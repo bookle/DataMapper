@@ -65,6 +65,18 @@ namespace BookLe.DataMapper.Tests
             Assert.True(invoices.First().Customer.FirstName == "Tim");
         }
 
+        [Fact]
+        public void QueryBuilder_ShouldPopulateCustomerUsingParameter()
+        {
+            var customers = new SQLiteQueryBuilder<Customer>()
+                .SetSql("select * from Customer where CustomerId = $CustomerId")
+                .AddParameter("$CustomerId", 19)
+                .MapProperty(c => c.FullName, row => $"{row.GetString("FirstName")} {row.GetString("LastName")}")
+                .GetResult().List;
+
+            Assert.True(customers.First().FullName == "Tim Goyer");
+        }
+
 
     }
 }

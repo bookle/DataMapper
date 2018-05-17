@@ -21,5 +21,17 @@ var users = new QueryBuilder<User>()
 ```
 Although you could compute ```FullName``` in the sql, it's cleaner to do it with .NET code since each sql dialect has it's own quirky syntax to do concatenation and you don't have to send extra data over the wire. This is just one simple example, but there are many more where .NET trumps SQL for simplicity and maintainability.
 
+To avoid SQL injection attacks, be sure to use parameterized sql (note: using SQLite syntax. For SQL Server you would use ```@``` instead of ```$```). Here's an example:
+```
+var users = new QueryBuilder<User>()
+    .SetSql("select Id, FName, LName, EmailAddress from Users where OrgId = $OrgId")
+    .AddParameter("$OrgId", 5)
+    .MapProperty(user => user.FirstName, "FName")
+    .MapProperty(user => user.LastName, "LName")
+    .MapProperty(user => user.FullName, row => $"{row.GetString("LName")}, {row.GetString("FName")})
+    .GetResult()
+    .List;
+```
+You can add as many parameters as you like and the order of calls to AddParameter and MapProperty does not matter.
 
 
