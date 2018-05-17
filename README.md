@@ -34,4 +34,72 @@ var users = new QueryBuilder<User>()
 ```
 You can add as many parameters as you like and the order of calls to AddParameter and MapProperty does not matter.
 
+## Examples
+Here are some code examples using the following SQLite table definition and .NET class files.
+
+```
+CREATE TABLE `Customer` (
+	`CustomerId`	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+	`FirstName`	NVARCHAR ( 40 ) NOT NULL,
+	`LastName`	NVARCHAR ( 20 ) NOT NULL,
+	`Company`	NVARCHAR ( 80 ),
+	`Address`	NVARCHAR ( 70 ),
+	`City`	NVARCHAR ( 40 ),
+	`State`	NVARCHAR ( 40 ),
+	`Country`	NVARCHAR ( 40 ),
+	`PostalCode`	NVARCHAR ( 10 ),
+	`Phone`	NVARCHAR ( 24 ),
+	`Fax`	NVARCHAR ( 24 ),
+	`Email`	NVARCHAR ( 60 ) NOT NULL,
+	`SupportRepId`	INTEGER,
+    `CreateDate` NVARCHAR (30) NOT NULL,
+	FOREIGN KEY(`SupportRepId`) REFERENCES `Employee`(`EmployeeId`) ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+```
+
+```
+class Customer
+{
+    public int CustomerId { get; set; }
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
+    public string FullName { get; set; }
+    public string Address { get; set; }
+    public string City { get; set; }
+    public string State { get; set; }
+    public string Zip { get; set; }
+    public string Phone { get; set; }
+    public string EmailAddress { get; set; }
+    public DateTime? DateAdded { get; set; }
+}
+```
+
+```
+class SQLiteQueryBuilder<T> : QueryBuilder<SQLiteConnection, T> where T : class, new()
+{
+    public SQLiteQueryBuilder()
+    {
+        this.SetConnectionString(@"Data Source=Data\chinook.db;Version=3;");
+    }
+}
+```
+
+### Populate a list of customers
+```
+var customers = new SQLiteQueryBuilder<Customer>()
+    .SetSql("select * from Customer")
+    .GetResult().List;
+```
+(Note: Zip, FullName and DateAdded will be null)
+
+### Populate a list of customers with all fields populated
+```
+var customers = new SQLiteQueryBuilder<Customer>()
+    .SetSql("select * from Customer where CustomerId = $CustomerId")
+    .AddParameter("$CustomerId", 19)
+    .MapProperty(c => c.Zip, "PostalCode")
+    .MapProperty(c => c.FullName, row => $"{row.GetString("FirstName")} {row.GetString("LastName")}")
+    .MapProperty(c => c.DateAdded, row => ConvertToDate(row.GetString("CreateDate")))
+    .GetResult().List;
+```
 
