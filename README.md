@@ -72,6 +72,33 @@ CREATE TABLE `Customer` (
 
 ```
 
+```sql
+
+Create Procedure GetCustomersByZip
+(
+  @zip varchar (11),
+  @count Integer OUTPUT
+)
+AS
+
+select
+ CustomerId,
+ FirstName,
+ LastName,
+ Company,
+ Address,
+ City,
+ State,
+ Country,
+ PostalCode
+from
+ Customers
+where
+ PostalCode = @zip
+set @count = @@Rowcount
+
+```
+
 ```csharp
 
 class Customer
@@ -103,6 +130,18 @@ class SQLiteQueryBuilder<T> : QueryBuilder<SQLiteConnection, T> where T : class,
 
 ```
 
+```csharp
+
+class SqlQueryBuilder<T> : QueryBuilder<SqlConnection, T> where T : class, new()
+{
+    public SqlQueryBuilder()
+    {
+        this.SetConnectionString(@"Server=myServerAddress;Database=myDataBase;Trusted_Connection=True;");
+    }
+}
+
+```
+
 ### Populate a list of customers
 
 ```csharp
@@ -128,5 +167,26 @@ var customers = new SQLiteQueryBuilder<Customer>()
     .GetResult().List;
 
 ```
+
+### Call a stored procedure
+
+```csharp
+
+var customerResult = new SqlQueryBuilder<Customer>()
+    .SetStoredProcedure("GetCustomersByZip")
+    .AddParameter("@zip", "30004")
+    .AddParameter("@count", -1, QueryParameterDirectionEnum.Output)
+    .MapProperty(c => c.Zip, "PostalCode")
+    .MapProperty(c => c.FullName, row => $"{row.GetString("FirstName")} {row.GetString("LastName")}")
+    .MapProperty(c => c.DateAdded, row => ConvertToDate(row.GetString("CreateDate")))
+    .GetResult();
+
+var customers = customerResult.List;
+var customerCount = Convert.ToInt32(customerResult.Parameters.First(p => p.Name == "@count").Value);
+
+```
+
+
+
 
 
