@@ -2,19 +2,20 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Data;
-using System.Configuration;
 using System.Linq.Expressions;
 using System.Reflection;
 
 namespace BookLe.DataMapper.Query
 {
     /// <summary>
-    /// This class is used to access data directly from the Sql Database.
+    /// Builder to specify sql and mapping defintions. Call GetResult to execute the query and produce a list.
     /// </summary>
     /// <typeparam name="T">
-    /// Represents an object (usually a business entity) that maps to a query result.
+    /// The type of object that will bind to the sql rows.
     /// </typeparam>
-    /// <typeparam name="TDb"></typeparam>
+    /// <typeparam name="TDb">
+    /// The type of database connection (e.g. SqlConnection)
+    /// </typeparam>
     public class QueryBuilder<TDb, T>
         where T : class, new()
         where TDb : class, IDbConnection, new()
@@ -27,11 +28,8 @@ namespace BookLe.DataMapper.Query
         protected List<PropertyMapping> _propertyMappings = new List<PropertyMapping>();
 
         /// <summary>
-        /// Connection string to the database. This is optional. If not supplied, will try to
-        /// retrieve the first connection string setting from the config file.
+        /// Connection string to the database.
         /// </summary>
-        /// <param name="connString"></param>
-        /// <returns></returns>
         public QueryBuilder<TDb, T> SetConnectionString(string connString)
         {
             _connString = connString;
@@ -41,8 +39,6 @@ namespace BookLe.DataMapper.Query
         /// <summary>
         /// Stored Procedure Name.
         /// </summary>
-        /// <param name="storedProcedureName"></param>
-        /// <returns></returns>
         public QueryBuilder<TDb, T> SetStoredProcedure(string storedProcedureName)
         {
             Command.CommandType = CommandType.StoredProcedure;
@@ -51,10 +47,8 @@ namespace BookLe.DataMapper.Query
         }
 
         /// <summary>
-        /// Sql text (e.g. select * from srl.Agreement where AgreementId = @AgreementId)
+        /// Sql Select statement
         /// </summary>
-        /// <param name="sql"></param>
-        /// <returns></returns>
         public QueryBuilder<TDb, T> SetSql(string sql)
         {
             Command.CommandType = CommandType.Text;
@@ -78,13 +72,15 @@ namespace BookLe.DataMapper.Query
         /// Sets the command timeout
         /// </summary>
         /// <param name="seconds">number of seconds the command is allowed to execute</param>
-        /// <returns></returns>
         public QueryBuilder<TDb, T> SetCommandTimeout(int seconds)
         {
             Command.CommandTimeout = seconds;
             return this;
         }
 
+        /// <summary>
+        /// Map a property to a column in the result set. The property name will be mapped to the column name.
+        /// </summary>
         public QueryBuilder<TDb, T> MapProperty<X>(Expression<Func<T, X>> property, string columnName)
         {
             var memberExp = (MemberExpression)property.Body;
@@ -92,6 +88,9 @@ namespace BookLe.DataMapper.Query
             return _mapProperty(propInfo.Name, columnName);
         }
 
+        /// <summary>
+        /// Map a property to a value computed using the row of the result set.
+        /// </summary>
         public QueryBuilder<TDb, T> MapProperty<X>(Expression<Func<T, X>> property, Func<DataValueList, X> mapperFunction)
         {
             var memberExp = (MemberExpression)property.Body;
@@ -117,12 +116,11 @@ namespace BookLe.DataMapper.Query
         }
 
         protected Func<DataValueList, T> _dataRowMapper;
+
         /// <summary>
         /// Maps a database row to an object. This can boost performance since the
         /// mapperFunction implementation can be hand coded to populate the object.
         /// </summary>
-        /// <param name="mapperFunction"></param>
-        /// <returns></returns>
         public QueryBuilder<TDb, T> MapObject(Func<DataValueList, T> mapperFunction)
         {
             _dataRowMapper = mapperFunction;
@@ -132,9 +130,6 @@ namespace BookLe.DataMapper.Query
         /// <summary>
         /// Adds a parameter for the stored procedure or the dynamic sql.
         /// </summary>
-        /// <param name="name"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
         public QueryBuilder<TDb, T> AddParameter(string name, object value)
         {
             var param = Command.CreateParameter();
@@ -145,11 +140,8 @@ namespace BookLe.DataMapper.Query
         }
 
         /// <summary>
-        /// Adds a parameter for the stored procedure or the dynamic sql.
+        /// Adds a parameter for the stored procedure or the dynamic sql only if condition is true.
         /// </summary>
-        /// <param name="name"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
         public QueryBuilder<TDb, T> AddParameter(Func<bool> condition, string name, object value)
         {
             if (!condition()) return this;
@@ -160,6 +152,9 @@ namespace BookLe.DataMapper.Query
             return this;
         }
 
+        /// <summary>
+        /// Adds a parameter for the stored procedure or the dynamic sql with a specified direction (e.g. Input, Output)
+        /// </summary>
         public QueryBuilder<TDb, T> AddParameter(string name, object value, QueryParameterDirectionEnum direction)
         {
             var param = Command.CreateParameter();
@@ -173,9 +168,8 @@ namespace BookLe.DataMapper.Query
         }
 
         /// <summary>
-        /// Return the list after executing the stored procedure or sql.
+        /// Return the list and parameter values after executing the stored procedure or sql.
         /// </summary>
-        /// <returns></returns>
         public virtual QueryResult<T> GetResult()
         {
 
@@ -191,7 +185,7 @@ namespace BookLe.DataMapper.Query
         }
 
         /// <summary>
-        /// Return the list after executing the stored procedure or sql.
+        /// Return the list and parameter values after executing the stored procedure or sql.
         /// </summary>
         public virtual QueryResult<T> GetResult(IDbConnection conn)
         {
@@ -230,6 +224,9 @@ namespace BookLe.DataMapper.Query
 
         }
 
+        /// <summary>
+        /// Return the list and parameter values after executing the stored procedure or sql.
+        /// </summary>
         public virtual QueryResult<T> GetResult(IDbTransaction trans)
         {
             Command.Transaction = trans;
@@ -239,7 +236,6 @@ namespace BookLe.DataMapper.Query
         /// <summary>
         /// Returns a new SqlConnection object. Does not open the connection.
         /// </summary>
-        /// <returns></returns>
         public IDbConnection GetUnOpenedConnection()
         {
             var conn = new TDb();
@@ -247,6 +243,9 @@ namespace BookLe.DataMapper.Query
             return conn;
         }
 
+        /// <summary>
+        /// The ADO.NET Command object
+        /// </summary>
         protected IDbCommand Command
         {
             get

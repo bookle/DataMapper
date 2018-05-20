@@ -17,7 +17,6 @@ namespace BookLe.DataMapper.Query
         /// <typeparam name="T"></typeparam>
         /// <param name="dr"></param>
         /// <param name="mapperFunction">Function that returns an instance of T passing in the current row.</param>
-        /// <returns></returns>
         public static IEnumerable<T> GetList<T>(IDataReader dr, Func<DataValueList, T> mapperFunction) where T : class, new()
         {
             while (dr.Read())
@@ -29,6 +28,25 @@ namespace BookLe.DataMapper.Query
                     rowValues.Add(new DataValue { ColumnName = dr.GetName(i), Value = value });
                 }
                 var item = mapperFunction(rowValues);
+                yield return item;
+            }
+
+        }
+
+        /// <summary>
+        /// Converts a IDataReader to a strongly typed IList. 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public static IEnumerable<T> GetList<T>(IDataReader dr, IList<PropertyMapping> propertyMappings, bool ignoreDataColumnNotFound) where T : class, new()
+        {
+
+            //Define a mapping for each property
+            var allMappings = _getAllMappings<T>(dr, propertyMappings, ignoreDataColumnNotFound);
+
+            while (dr.Read())
+            {
+                var item = _getItem<T>(dr, allMappings);
                 yield return item;
             }
 
@@ -51,25 +69,6 @@ namespace BookLe.DataMapper.Query
             return list;
         }
 
-
-        /// <summary>
-        /// Converts a IDataReader to a strongly typed IList. 
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public static IEnumerable<T> GetList<T>(IDataReader dr, IList<PropertyMapping> propertyMappings, bool ignoreDataColumnNotFound) where T : class, new()
-        {
-
-            //Define a mapping for each property
-            var allMappings = _getAllMappings<T>(dr, propertyMappings, ignoreDataColumnNotFound);
-
-            while (dr.Read())
-            {
-                var item = _getItem<T>(dr, allMappings);
-                yield return item;
-            }
-
-        }
 
         /// <summary>
         /// Converts a IDataReader to a strongly typed IList. 

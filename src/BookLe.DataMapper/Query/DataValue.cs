@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace BookLe.DataMapper.Query
+﻿namespace BookLe.DataMapper.Query
 {
     public class DataValue
     {

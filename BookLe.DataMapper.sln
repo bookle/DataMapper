@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.2027
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BookLe.DataMapper", "src\BookLe.DataMapper\BookLe.DataMapper.csproj", "{6A729782-1C20-4CB9-8A2B-34DC60F47412}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BookLe.DataMapper.Tests", "tests\BookLe.DataMapper.Tests\BookLe.DataMapper.Tests.csproj", "{F85D367D-9BF1-4A1D-848E-7945473FA99C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6A729782-1C20-4CB9-8A2B-34DC60F47412}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6A729782-1C20-4CB9-8A2B-34DC60F47412}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6A729782-1C20-4CB9-8A2B-34DC60F47412}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6A729782-1C20-4CB9-8A2B-34DC60F47412}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F85D367D-9BF1-4A1D-848E-7945473FA99C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F85D367D-9BF1-4A1D-848E-7945473FA99C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F85D367D-9BF1-4A1D-848E-7945473FA99C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F85D367D-9BF1-4A1D-848E-7945473FA99C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {85783D34-85F4-48B1-BCD4-1EACC6EC435D}
+	EndGlobalSection
+EndGlobal

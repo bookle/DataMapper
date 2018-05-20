@@ -22,7 +22,9 @@ var users = new QueryBuilder<User>()
 Although you could compute ```FullName``` in the sql, it's cleaner to do it with .NET code since each sql dialect has it's own quirky syntax to do concatenation and you don't have to send extra data over the wire. This is just one simple example, but there are many more where .NET trumps SQL for simplicity and maintainability.
 
 To avoid SQL injection attacks, be sure to use parameterized sql (note: using SQLite syntax. For SQL Server you would use ```@``` instead of ```$```). Here's an example:
-```
+
+```csharp
+
 var users = new QueryBuilder<User>()
     .SetSql("select Id, FName, LName, EmailAddress from Users where OrgId = $OrgId")
     .AddParameter("$OrgId", 5)
@@ -31,33 +33,39 @@ var users = new QueryBuilder<User>()
     .MapProperty(user => user.FullName, row => $"{row.GetString("LName")}, {row.GetString("FName")})
     .GetResult()
     .List;
+
 ```
+
 You can add as many parameters as you like and the order of calls to AddParameter and MapProperty does not matter.
 
 ## Examples
+
 Here are some code examples using the following SQLite table definition and .NET class files.
 
-```
+```sql
+
 CREATE TABLE `Customer` (
-	`CustomerId`	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-	`FirstName`	NVARCHAR ( 40 ) NOT NULL,
-	`LastName`	NVARCHAR ( 20 ) NOT NULL,
-	`Company`	NVARCHAR ( 80 ),
-	`Address`	NVARCHAR ( 70 ),
-	`City`	NVARCHAR ( 40 ),
-	`State`	NVARCHAR ( 40 ),
-	`Country`	NVARCHAR ( 40 ),
-	`PostalCode`	NVARCHAR ( 10 ),
-	`Phone`	NVARCHAR ( 24 ),
-	`Fax`	NVARCHAR ( 24 ),
-	`Email`	NVARCHAR ( 60 ) NOT NULL,
-	`SupportRepId`	INTEGER,
+    `CustomerId`    INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    `FirstName` NVARCHAR ( 40 ) NOT NULL,
+    `LastName`  NVARCHAR ( 20 ) NOT NULL,
+    `Company`   NVARCHAR ( 80 ),
+    `Address`   NVARCHAR ( 70 ),
+    `City`  NVARCHAR ( 40 ),
+    `State` NVARCHAR ( 40 ),
+    `Country`   NVARCHAR ( 40 ),
+    `PostalCode`    NVARCHAR ( 10 ),
+    `Phone` NVARCHAR ( 24 ),
+    `Fax`   NVARCHAR ( 24 ),
+    `Email` NVARCHAR ( 60 ) NOT NULL,
+    `SupportRepId`  INTEGER,
     `CreateDate` NVARCHAR (30) NOT NULL,
-	FOREIGN KEY(`SupportRepId`) REFERENCES `Employee`(`EmployeeId`) ON DELETE NO ACTION ON UPDATE NO ACTION
+    FOREIGN KEY(`SupportRepId`) REFERENCES `Employee`(`EmployeeId`) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
-```
 
 ```
+
+```csharp
+
 class Customer
 {
     public int CustomerId { get; set; }
@@ -72,9 +80,11 @@ class Customer
     public string EmailAddress { get; set; }
     public DateTime? DateAdded { get; set; }
 }
-```
 
 ```
+
+```csharp
+
 class SQLiteQueryBuilder<T> : QueryBuilder<SQLiteConnection, T> where T : class, new()
 {
     public SQLiteQueryBuilder()
@@ -82,18 +92,25 @@ class SQLiteQueryBuilder<T> : QueryBuilder<SQLiteConnection, T> where T : class,
         this.SetConnectionString(@"Data Source=Data\chinook.db;Version=3;");
     }
 }
+
 ```
 
 ### Populate a list of customers
-```
+
+```csharp
+
 var customers = new SQLiteQueryBuilder<Customer>()
     .SetSql("select * from Customer")
     .GetResult().List;
+
 ```
+
 (Note: Zip, FullName and DateAdded will be null)
 
 ### Populate a list of customers with all fields populated
-```
+
+```csharp
+
 var customers = new SQLiteQueryBuilder<Customer>()
     .SetSql("select * from Customer where CustomerId = $CustomerId")
     .AddParameter("$CustomerId", 19)
@@ -101,5 +118,7 @@ var customers = new SQLiteQueryBuilder<Customer>()
     .MapProperty(c => c.FullName, row => $"{row.GetString("FirstName")} {row.GetString("LastName")}")
     .MapProperty(c => c.DateAdded, row => ConvertToDate(row.GetString("CreateDate")))
     .GetResult().List;
+
 ```
+
 
