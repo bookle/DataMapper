@@ -8,7 +8,7 @@ using BookLe.DataMapper.Query;
 
 namespace BookLe.DataMapper.Tests.QueryBuilders
 {
-    class SQLiteQueryBuilder<T> : QueryBuilder<SQLiteConnection, T> where T : class, new()
+    public class SQLiteQueryBuilder<T> : QueryBuilder<SQLiteConnection, T> where T : class, new()
     {
         public SQLiteQueryBuilder()
         {
