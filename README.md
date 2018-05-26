@@ -1,6 +1,10 @@
-## Overview
+# Overview
 
-DataMapper is a fluent library used to map relational data to .NET objects. It uses ADO.NET underneath and can be used with any compliant ADO.NET provider (has been used successfully with SQL Server, Oracle, MySQL, DB2 Teradata and SQLite). The developer is in full control of the sql so all that is left is to map the result set to a list of objects. By default, the property name of the .NET object is mapped to the corresponding column name of the result set (using a case-insensitive match). The MapProperty method is used to define a mapping when the default will not suffice. Here is a simple example:
+DataMapper is a fluent library used to map relational data to .NET objects. It uses ADO.NET underneath and can be used with any compliant ADO.NET provider (has been used successfully with SQL Server, Oracle, MySQL, DB2 Teradata and SQLite). The developer is in full control of the sql so all that is left is to map the result set to a list of objects. By default, the property name of the .NET object is mapped to the corresponding column name of the result set (using a case-insensitive match). The MapProperty method is used to define a mapping when the default will not suffice.
+
+## Usage
+
+### Simple mapping
 
 ```csharp
 
@@ -13,7 +17,24 @@ var users = new QueryBuilder<User>()
 
 ```
 
-```users``` will be a ```List<User>``` with ```Id, FirstName, LastName and EmailAddress``` populated. If there are any additional fields in ```User```, they will have default values since there is no corresponding column in the result. You can, however, call MapProperty with a lamda function to populate a value. Let's say ```User``` has a ```FullName``` property. If we do nothing, it will be null (default value for string). But we could use the following code to populate the FullName:
+Another option would be to just alias the columns in sql
+
+```csharp
+
+var users = new QueryBuilder<User>()
+    .SetSql("select Id, FName As FirstName, LName As LastName, EmailAddress from Users")
+    .GetResult()
+    .List;
+
+```
+
+The MapProperty calls do have advantages such as compile-time checking and times when aliasing the columns is just not an option - e.g., a stored procedure that's used by other clients.
+
+```users``` will be a ```List<User>``` with ```Id, FirstName, LastName and EmailAddress``` populated. If there are any additional fields in ```User```, they will have default values since there is no corresponding column in the result. 
+
+### Use a function to map value
+
+You can, however, call MapProperty with a lamda function to populate a value. Let's say ```User``` has a ```FullName``` property. If we do nothing, it will be null (default value for string). But we could use the following code to populate the FullName:
 
 ```csharp
 
@@ -27,7 +48,40 @@ var users = new QueryBuilder<User>()
 
 ```
 
-Although you could compute ```FullName``` in the sql, it's cleaner to do it with .NET code since each sql dialect has it's own quirky syntax to do concatenation and you don't have to send extra data over the wire. This is just one simple example, but there are many more where .NET trumps SQL for simplicity and maintainability.
+Although you could compute ```FullName``` in the sql, it's usually better to do it with .NET code since each sql dialect has different syntax to do concatenation and you don't have to send extra data over the wire. This is just one simple example, but there are many more where .NET code beats SQL for simplicity and maintainability.
+
+### Map Enum values
+
+Another feature is automatically mapping integer values to Enum values, eliminating repetitive, boilerplate conversion code. Let's say ```User``` has a ```Role``` property with ```Role``` being an enum defined as follows:
+
+```csharp
+
+    public enum Role
+    {
+        Admin = 1,
+        Manager = 7,
+        Worker = 10
+    }
+
+```
+
+Then, we could just do this without any expicit conversion code:
+
+```csharp
+
+var users = new QueryBuilder<User>()
+    .SetSql("select Id, FName, LName, EmailAddress, Role from Users")
+    .MapProperty(user => user.FirstName, "FName")
+    .MapProperty(user => user.LastName, "LName")
+    .MapProperty(user => user.FullName, row => $"{row.GetString("LName")}, {row.GetString("FName")})
+    .GetResult()
+    .List;
+
+```
+
+For this to work, enum values must be integers and the db type should be convertible to integer (byte, smallint, int).
+
+### Named Parameters
 
 To avoid SQL injection attacks, be sure to use parameterized sql (note: using SQLite syntax. For SQL Server you would use ```@``` instead of ```$```). Here's an example:
 
@@ -48,7 +102,7 @@ You can add as many parameters as you like and the order of calls to AddParamete
 
 ## Examples
 
-Here are some code examples using the following SQLite table definition and .NET class files.
+Here are some code examples using the following SQLite table definition, SQL Server stored procedure and .NET class files.
 
 ```sql
 
@@ -118,6 +172,8 @@ class Customer
 
 ```
 
+### Concrete SQLite Query Builder
+
 ```csharp
 
 class SQLiteQueryBuilder<T> : QueryBuilder<SQLiteConnection, T> where T : class, new()
@@ -129,6 +185,8 @@ class SQLiteQueryBuilder<T> : QueryBuilder<SQLiteConnection, T> where T : class,
 }
 
 ```
+
+### Concrete SQL Server Query Builder
 
 ```csharp
 
