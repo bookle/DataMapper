@@ -34,7 +34,7 @@ namespace BookLe.DataMapper.Query
         }
 
         /// <summary>
-        /// Converts a IDataReader to a strongly typed IList. 
+        /// Converts a IDataReader to a strongly typed IEnumerable. 
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
@@ -52,6 +52,9 @@ namespace BookLe.DataMapper.Query
 
         }
 
+        /// <summary>
+        /// Async version to convert SqlDataReader to strongly typed List (only supports SQL Server at the moment) 
+        /// </summary>
         public static async Task<List<T>> GetListAsync<T>(SqlDataReader dr, Func<DataValueList, T> mapperFunction) where T : class, new()
         {
             var list = new List<T>();
@@ -71,10 +74,8 @@ namespace BookLe.DataMapper.Query
 
 
         /// <summary>
-        /// Converts a IDataReader to a strongly typed IList. 
+        /// Async version to convert SqlDataReader to strongly typed List (only supports SQL Server at the moment) 
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
         public static async Task<List<T>> GetListAsync<T>(SqlDataReader dr, IList<PropertyMapping> propertyMappings, bool ignoreDataColumnNotFound) where T : class, new()
         {
 

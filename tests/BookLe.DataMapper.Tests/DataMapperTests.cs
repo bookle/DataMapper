@@ -13,7 +13,7 @@ namespace BookLe.DataMapper.Tests
         public void QueryBuilder_ShouldHydrateCustomerList()
         {
             var customers = new SQLiteQueryBuilder<Customer>()
-                .SetSql("select * from Customer")
+                .SetSql("select CustomerId, FirstName, LastName, Company, Address, City, State, Country, PostalCode As Zip, Phone, Fax, Email from Customer")
                 .GetResult().List;
            
             Assert.True(customers.Count > 0);
@@ -27,7 +27,7 @@ namespace BookLe.DataMapper.Tests
         public void QueryBuilder_ShouldPopulateZipFromPostalCode()
         {
             var customers = new SQLiteQueryBuilder<Customer>()
-                .SetSql("select * from Customer where CustomerId = $CustomerId")
+                .SetSql("select CustomerId, FirstName, LastName, Company, Address, City, State, Country, PostalCode, Phone, Fax, Email from Customer where CustomerId = $CustomerId")
                 .AddParameter("$CustomerId", 19)
                 .MapProperty(c => c.Zip, "PostalCode")
                 .GetResult().List;
@@ -39,7 +39,7 @@ namespace BookLe.DataMapper.Tests
         public void QueryBuilder_ShouldPopulateFullName()
         {
             var customers = new SQLiteQueryBuilder<Customer>()
-                .SetSql("select * from Customer where CustomerId = $CustomerId")
+                .SetSql("select CustomerId, FirstName, LastName, Company, Address, City, State, Country, PostalCode, Phone, Fax, Email from Customer where CustomerId = $CustomerId")
                 .AddParameter("$CustomerId", 19)
                 .MapProperty(c => c.FullName, row => $"{row.GetString("FirstName")} {row.GetString("LastName")}")
                 .GetResult().List;
@@ -71,7 +71,7 @@ namespace BookLe.DataMapper.Tests
         public void QueryBuilder_ShouldPopulateCustomerUsingParameter()
         {
             var customers = new SQLiteQueryBuilder<Customer>()
-                .SetSql("select * from Customer where CustomerId = $CustomerId")
+                .SetSql("select CustomerId, FirstName, LastName, Company, Address, City, State, Country, PostalCode, Phone, Fax, Email from Customer where CustomerId = $CustomerId")
                 .AddParameter("$CustomerId", 19)
                 .MapProperty(c => c.FullName, row => $"{row.GetString("FirstName")} {row.GetString("LastName")}")
                 .GetResult().List;
