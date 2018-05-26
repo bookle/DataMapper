@@ -4,6 +4,8 @@ DataMapper is a fluent library used to map relational data to .NET objects. It u
 
 ## Usage
 
+Note: using ```new QueryBuilder``` for brevity/demonstation purposes. In reality, you would derive a concrete builder from QueryBuilder.
+
 ### Simple mapping
 
 ```csharp
