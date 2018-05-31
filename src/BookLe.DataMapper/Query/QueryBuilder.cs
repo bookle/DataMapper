@@ -26,6 +26,7 @@ namespace BookLe.DataMapper.Query
         protected bool _ignoreDataColumnNotFound = true;
         protected IDbDataAdapter _dataAdapter;
         protected List<PropertyMapping> _propertyMappings = new List<PropertyMapping>();
+        protected Func<DataValueList, T> _dataRowMapper;
 
         /// <summary>
         /// Connection string to the database.
@@ -114,8 +115,6 @@ namespace BookLe.DataMapper.Query
             _propertyMappings.Add(new PropertyMapping { PropertyName = propertyName, ColumnName = columnName });
             return this;
         }
-
-        protected Func<DataValueList, T> _dataRowMapper;
 
         /// <summary>
         /// Maps a database row to an object. This can boost performance since the
@@ -229,6 +228,7 @@ namespace BookLe.DataMapper.Query
         /// </summary>
         public virtual QueryResult<T> GetResult(IDbTransaction trans)
         {
+            Command.Connection = trans.Connection;
             Command.Transaction = trans;
             return GetResult(Command.Transaction.Connection);
         }

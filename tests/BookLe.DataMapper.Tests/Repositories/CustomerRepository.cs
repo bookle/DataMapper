@@ -12,8 +12,8 @@ namespace BookLe.DataMapper.Tests.Repositories
     }
     public class CustomerRepository : ICustomerRepository
     {
-        SQLiteQueryBuilder<Customer> _queryBuilder;
-        public CustomerRepository(SQLiteQueryBuilder<Customer> queryBuilder)
+        SqlQueryBuilder<Customer> _queryBuilder;
+        public CustomerRepository(SqlQueryBuilder<Customer> queryBuilder)
         {
             _queryBuilder = queryBuilder;
         }
