@@ -83,6 +83,10 @@ var users = new QueryBuilder<User>()
 
 For this to work, enum values must be integers and the db type should be convertible to integer (byte, smallint, int).
 
+### Natural Mappings
+
+Data values should map naturally to .NET values. If a value can be null, you should always map it to a nullable type. Blob types should map to byte array. Unique identifiers should map to Guid.
+
 ### Named Parameters
 
 To avoid SQL injection attacks, be sure to use parameterized sql (note: using SQLite syntax. For SQL Server you would use ```@``` instead of ```$```). Here's an example:

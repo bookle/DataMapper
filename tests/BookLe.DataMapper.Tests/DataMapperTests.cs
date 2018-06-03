@@ -4,6 +4,7 @@ using System.Data.SQLite;
 using System.Linq;
 using Xunit;
 using BookLe.DataMapper.Extensions;
+using BookLe.DataMapper.Query;
 using BookLe.DataMapper.Tests.QueryBuilders;
 using BookLe.DataMapper.Tests.Models;
 
@@ -72,6 +73,74 @@ namespace BookLe.DataMapper.Tests
             builder.MapProperty(c => c.FirstName, "FName");
             builder.GetResult();
             Assert.True(builder.InternalProps.PropertyMappings.First(pm => pm.PropertyName == "FirstName").ColumnName == "FName");
+        }
+
+        [Fact]
+        public void QueryBuilder_ShouldMapPropertyFunction()
+        {
+            var dataRow = new DataValueList();
+            dataRow.Add(new DataValue
+            {
+                ColumnName = "FName",
+                Value = "Joe"
+            });
+            var builder = new MockSqlQueryBuilder<Customer>();
+            builder.MapProperty(c => c.FirstName, row => row.GetString("FName"));
+            builder.GetResult();
+            Assert.True(builder.InternalProps.PropertyMappings.First(pm => pm.PropertyName == "FirstName").PropertyMapperDataRow(dataRow) == "Joe");
+        }
+
+        [Fact]
+        public void QueryBuilder_ShouldMapObject()
+        {
+            var dataRow = new DataValueList();
+            dataRow.Add(new DataValue
+            {
+                ColumnName = "FName",
+                Value = "Joe"
+            });
+            var builder = new MockSqlQueryBuilder<Customer>();
+            builder.MapObject(row => new Customer { FirstName = row.GetString("FName") });
+            builder.GetResult();
+            Assert.True(builder.InternalProps.DataRowMapper(dataRow).FirstName == "Joe");
+        }
+
+        [Fact]
+        public void QueryBuilder_ShouldAddParameter()
+        {
+            var builder = new MockSqlQueryBuilder<Customer>();
+            builder.AddParameter("@test", "testValue");
+            builder.GetResult();
+            Assert.True(builder.InternalProps.Command.Parameters.Cast<IDbDataParameter>().First(p => p.ParameterName == "@test").Value == "testValue");
+        }
+
+        [Fact]
+        public void QueryBuilder_ShouldAddParameterWhenConditionIsTrue()
+        {
+            var builder = new MockSqlQueryBuilder<Customer>();
+            builder.AddParameter(() => true, "@test", "testValue");
+            builder.GetResult();
+            Assert.True(builder.InternalProps.Command.Parameters.Cast<IDbDataParameter>().First(p => p.ParameterName == "@test").Value == "testValue");
+        }
+
+
+        [Fact]
+        public void QueryBuilder_ShouldNotAddParameterWhenConditionIsFalse()
+        {
+            var builder = new MockSqlQueryBuilder<Customer>();
+            builder.AddParameter(() => true, "@testTrue", "testValue");
+            builder.AddParameter(() => false, "@testFalse", "testValue");
+            builder.GetResult();
+            Assert.True(builder.InternalProps.Command.Parameters.Cast<IDbDataParameter>().Any(p => p.ParameterName == "@testFalse") == false);
+        }
+
+        [Fact]
+        public void QueryBuilder_ShouldAddParameterWithDirection()
+        {
+            var builder = new MockSqlQueryBuilder<Customer>();
+            builder.AddParameter("@test", "testValue", QueryParameterDirectionEnum.Output);
+            builder.GetResult();
+            Assert.True(builder.InternalProps.Command.Parameters.Cast<IDbDataParameter>().First(p => p.ParameterName == "@test").Direction == ParameterDirection.Output);
         }
 
         [Fact]

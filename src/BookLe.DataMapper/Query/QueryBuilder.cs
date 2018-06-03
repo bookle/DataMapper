@@ -250,9 +250,9 @@ namespace BookLe.DataMapper.Query
         {
             get
             {
-                var conn = GetUnOpenedConnection();
                 if (_command == null)
                 {
+                    var conn = GetUnOpenedConnection();
                     _command = conn.CreateCommand();
                     _command.CommandTimeout = 500;
                 }
