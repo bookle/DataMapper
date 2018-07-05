@@ -1,7 +1,9 @@
-﻿using BookLe.DataMapper.Tests.Models;
+﻿using BookLe.DataMapper.Query;
+using BookLe.DataMapper.Tests.Models;
 using BookLe.DataMapper.Tests.QueryBuilders;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Text;
 
 namespace BookLe.DataMapper.Tests.Repositories
@@ -21,6 +23,7 @@ namespace BookLe.DataMapper.Tests.Repositories
         {
             var customers = _queryBuilder
                 .SetSql("select * from Customer")
+                .MapProperty(c => c.Zip, "PostalCode")
                 .GetResult().List;
             return customers;
         }

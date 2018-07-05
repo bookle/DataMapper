@@ -27,6 +27,25 @@ namespace BookLe.DataMapper.Query
         protected IDbDataAdapter _dataAdapter;
         protected List<PropertyMapping> _propertyMappings = new List<PropertyMapping>();
         protected Func<DataValueList, T> _dataRowMapper;
+        protected Func<IDbCommand> _createCommand;
+        protected Action<IDbConnection> _openConnection;
+
+        public QueryBuilder()
+        {
+            _createCommand = () =>
+            {
+                var conn = GetUnOpenedConnection();
+                return conn.CreateCommand();
+            };
+
+            _openConnection = conn => conn.Open();
+        }
+
+        public QueryBuilder(Func<IDbCommand> createCommand, Action<IDbConnection> openConnection)
+        {
+            _createCommand = createCommand;
+            _openConnection = openConnection;
+        }
 
         /// <summary>
         /// Connection string to the database.
@@ -176,7 +195,7 @@ namespace BookLe.DataMapper.Query
             {
                 conn.ConnectionString = _connString;
                 Command.Connection = conn;
-                conn.Open();
+                _openConnection(conn);
 
                 return GetResult(conn);
             }
@@ -188,11 +207,9 @@ namespace BookLe.DataMapper.Query
         /// </summary>
         public virtual QueryResult<T> GetResult(IDbConnection conn)
         {
-            System.Diagnostics.Stopwatch timer = new System.Diagnostics.Stopwatch();
-
             if (conn.State != ConnectionState.Open)
             {
-                conn.Open();
+                _openConnection(conn);
             }
 
             Command.Connection = conn;
@@ -252,8 +269,7 @@ namespace BookLe.DataMapper.Query
             {
                 if (_command == null)
                 {
-                    var conn = GetUnOpenedConnection();
-                    _command = conn.CreateCommand();
+                    _command = _createCommand();
                     _command.CommandTimeout = 500;
                 }
                 return _command;

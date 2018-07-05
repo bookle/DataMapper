@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlClient;
 using System.Data.SQLite;
 using System.Text;
@@ -13,5 +14,7 @@ namespace BookLe.DataMapper.Tests.QueryBuilders
         {
             this.SetConnectionString(@"Server=myServerAddress;Database=myDataBase;Trusted_Connection=True;");
         }
+
+        public SqlQueryBuilder(Func<IDbCommand> createCommand, Action<IDbConnection> openConnection) : base(createCommand, openConnection) { }
     }
 }
