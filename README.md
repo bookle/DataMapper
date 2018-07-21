@@ -1,6 +1,10 @@
 # Overview
 
-DataMapper is a fluent library used to map relational data to .NET objects. It uses ADO.NET underneath and can be used with any compliant ADO.NET provider (has been used successfully with SQL Server, Oracle, MySQL, DB2, Teradata and SQLite). The developer is in full control of the sql so all that is left is to map the result set to a list of objects. By default, the property name of the .NET object is mapped to the corresponding column name of the result set (using a case-insensitive match). The MapProperty method is used to define a mapping when the default will not suffice.
+DataMapper is a fluent library used to map relational data to .NET objects. It uses ADO.NET underneath and can be used with any compliant ADO.NET provider (has been used successfully with SQL Server, Oracle, MySQL, DB2, Teradata and SQLite). The developer is in full control of the sql so all that is left is to map the result set to a list of objects. By default, the property name of the .NET object is mapped to the corresponding column name of the result set (using a case-insensitive match). The MapProperty method is used to define a mapping when the default will not suffice. 
+
+## Limitations
+
+This library is not a full-fledged ORM, nor does it claim to be. For intance, you cannot (at the moment) use this to lazy load child collections or eagerly load child collections in one fell swoop as is done, with an enormous payload, in other mainstream ORM's. No, this library, can be used to perform simple one-level deep mappings so you would need to design your calls to query data when needed and not have requirements to return the entire object graph in one call.
 
 ## Usage
 
