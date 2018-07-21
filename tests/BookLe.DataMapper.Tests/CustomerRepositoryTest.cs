@@ -61,7 +61,14 @@ namespace BookLe.DataMapper.Tests
             var sqlBuilder = new SqlQueryBuilder<Customer>(() => command, conn => { });     
             var repository = new CustomerRepository(sqlBuilder);
             var customers = repository.GetCustomers();
-            Assert.True(customers.Count() == list.Count);
+            Assert.True(AreEqual(customers, list));
+        }
+
+        private bool AreEqual(object obj1, object obj2)
+        {
+            var json1 = Newtonsoft.Json.JsonConvert.SerializeObject(obj1);
+            var json2 = Newtonsoft.Json.JsonConvert.SerializeObject(obj2);
+            return json1 == json2;
         }
 
     }
