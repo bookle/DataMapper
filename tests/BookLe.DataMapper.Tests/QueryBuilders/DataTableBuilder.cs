@@ -39,7 +39,20 @@ namespace BookLe.DataMapper.Tests.QueryBuilders
                 {
                     columnName = name;
                 }
-                dt.Columns.Add(columnName, prop.PropertyType);
+
+                var underlyingType = Nullable.GetUnderlyingType(prop.PropertyType);
+                if (underlyingType != null)
+                {
+                    // this is a nullable type, make it a nullable column
+                    var column = new DataColumn(prop.Name, underlyingType);
+                    column.AllowDBNull = true;
+                    dt.Columns.Add(column);
+                }
+                else
+                {
+                    // non-nullable type
+                    dt.Columns.Add(columnName, prop.PropertyType);
+                }
                 dict.Add(columnName, prop);
             }
 
@@ -48,7 +61,15 @@ namespace BookLe.DataMapper.Tests.QueryBuilders
                 var row = dt.NewRow();
                 foreach (var kv in dict)
                 {
-                    row[kv.Key] = kv.Value.GetValue(item);
+                    var value = kv.Value.GetValue(item);
+                    if (value == null)
+                    {
+                        row[kv.Key] = DBNull.Value;
+                    }
+                    else
+                    {
+                        row[kv.Key] = value;
+                    }
                 }
                 dt.Rows.Add(row);
             }

@@ -6,6 +6,7 @@ using System.Data;
 using System.Collections.Generic;
 using System.Linq;
 using Xunit;
+using System;
 
 namespace BookLe.DataMapper.Tests
 {
@@ -62,6 +63,7 @@ namespace BookLe.DataMapper.Tests
             var repository = new CustomerRepository(sqlBuilder);
             var customers = repository.GetCustomers();
             Assert.True(AreEqual(customers, list));
+
         }
 
         private bool AreEqual(object obj1, object obj2)
