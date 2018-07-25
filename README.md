@@ -4,7 +4,7 @@ DataMapper is a fluent library used to map relational data to .NET objects. It u
 
 ## Limitations
 
-This library is not a full-fledged ORM, nor does it claim to be. For intance, you cannot (at the moment) use this to lazy load child collections or eagerly load child collections in one fell swoop as is done, with an enormous payload, in other mainstream ORM's. No, this library, can be used to perform simple one-level deep mappings so you would need to design your calls to query data when needed and not have requirements to return the entire object graph in one call.
+This library is not a full-fledged ORM. For intance, you cannot (at the moment) use this to lazy load child collections or eagerly load child collections in one fell swoop as is done in other mainstream ORM's using enormous payloads. This library, can be used to perform simple one-level deep mappings so you would need to design your calls to query data when needed and not have requirements to return the entire object graph in one call.
 
 ## Usage
 
@@ -63,7 +63,7 @@ var users = new QueryBuilder<User>()
 
 ```
 
-Although you could compute ```FullName``` in the sql, it's usually better to do it with .NET code since each sql dialect has different syntax to do concatenation and you don't have to send extra data over the wire. This is just one simple example, but there are many more where .NET code beats SQL for simplicity and maintainability.
+Although you could compute ```FullName``` in the sql, you can also choose .NET rather than trying to remember the quirky syntax of a specific SQL dialect.
 
 ### Map Enum values
 
@@ -80,7 +80,7 @@ enum Role
 
 ```
 
-Then, we could just do this without any expicit conversion code:
+Then, we could do the following without any expicit conversion code (if the column name and property name were the same, we wouldn't need to do anything, but here we use MapProperty to map the db integer value to the enum value. We could just as easily alias RoleId as Role eliminating the need for MapProperty.) For this to work, of course, enum values must be integers and the db type should be convertible to integer (byte, smallint, int):
 
 ```csharp
 
@@ -104,8 +104,6 @@ var users = new QueryBuilder<User>()
     .List;
 
 ```
-
-For this to work, enum values must be integers and the db type should be convertible to integer (byte, smallint, int).
 
 ### Natural Mappings
 
@@ -278,7 +276,7 @@ In this example, I show how to use the QueryResult return value to get not only 
 
 ## Unit Testing
 
-How in the f*** do I mock this thing so I can cover my client code with warm and fuzzy test code?
+How to mock this QueryBuilder thing so I can cover my client code with warm and fuzzy test code?
 
 ### Here's one overly simple way - subclass your concrete QueryBuilder
 
@@ -295,7 +293,7 @@ In the test project, there is a DataTableBuilder. This is a utility that can be 
 
 Let's say you have a repository with a dependency on QueryBuilder.
 
-You have been a good boy and propery injected your QueryBuilder into your repository class.
+You have properly injected a QueryBuilder into your repository class.
 In one of your methods, you make this call:
 
 ```csharp
