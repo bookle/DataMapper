@@ -148,11 +148,25 @@ namespace BookLe.DataMapper.Query
         /// <summary>
         /// Adds a parameter for the stored procedure or the dynamic sql.
         /// </summary>
-        public QueryBuilder<TDb, T> AddParameter(string name, object value)
+        public QueryBuilder<TDb, T> AddParameter(string name,
+                                                 object value,
+                                                 Action<QueryParameter> setAdditionalProperties = null)
         {
+            var queryParam = new QueryParameter
+            {
+                Name = name,
+                Value = value
+            };
+            setAdditionalProperties?.Invoke(queryParam);
+
             var param = Command.CreateParameter();
-            param.ParameterName = name;
-            param.Value = value;
+            param.ParameterName = queryParam.Name;
+            param.Value = queryParam.Value;
+            if (queryParam.DataType.HasValue) param.DbType = DataTypeHelper.MapDataType(queryParam.DataType.Value);
+            if (queryParam.Size.HasValue) param.Size = queryParam.Size.Value;
+            if (queryParam.Precision.HasValue) param.Precision = queryParam.Precision.Value;
+            if (queryParam.Scale.HasValue) param.Scale = queryParam.Scale.Value;
+            if (queryParam.Direction.HasValue) param.Direction = DataTypeHelper.MapDirection(queryParam.Direction.Value);
             Command.Parameters.Add(param);
             return this;
         }
