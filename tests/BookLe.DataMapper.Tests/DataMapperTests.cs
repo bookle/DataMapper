@@ -115,6 +115,24 @@ namespace BookLe.DataMapper.Tests
         }
 
         [Fact]
+        public void QueryBuilder_ShouldAddQueryParameter_VarChar()
+        {
+            var builder = new MockSqlQueryBuilder<Customer>();
+            builder.AddParameter(new QueryParameter { Name = "@test", Value = "testValue", DataType = DataTypeEnum.VarChar, Size = 10 });
+            builder.GetResult();
+            Assert.True(builder.InternalProps.Command.Parameters.Cast<IDbDataParameter>().First(p => p.ParameterName == "@test" && p.DbType == DbType.AnsiString && p.Size == 10).Value == "testValue");
+        }
+
+        [Fact]
+        public void QueryBuilder_ShouldAddQueryParameter_Char()
+        {
+            var builder = new MockSqlQueryBuilder<Customer>();
+            builder.AddParameter(new QueryParameter { Name = "@test", Value = "testValue", DataType = DataTypeEnum.Char, Size = 10 });
+            builder.GetResult();
+            Assert.True(builder.InternalProps.Command.Parameters.Cast<IDbDataParameter>().First(p => p.ParameterName == "@test" && p.DbType == DbType.AnsiStringFixedLength && p.Size == 10).Value == "testValue");
+        }
+
+        [Fact]
         public void QueryBuilder_ShouldAddParameterWhenConditionIsTrue()
         {
             var builder = new MockSqlQueryBuilder<Customer>();

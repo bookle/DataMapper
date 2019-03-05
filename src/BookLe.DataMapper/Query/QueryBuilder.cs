@@ -149,16 +149,23 @@ namespace BookLe.DataMapper.Query
         /// Adds a parameter for the stored procedure or the dynamic sql.
         /// </summary>
         public QueryBuilder<TDb, T> AddParameter(string name,
-                                                 object value,
-                                                 Action<QueryParameter> setAdditionalProperties = null)
+                                                 object value)
         {
-            var queryParam = new QueryParameter
-            {
-                Name = name,
-                Value = value
-            };
-            setAdditionalProperties?.Invoke(queryParam);
+            var param = Command.CreateParameter();
+            param.ParameterName = name;
+            param.Value = value;
+            Command.Parameters.Add(param);
+            return this;
+        }
 
+        public QueryBuilder<TDb, T> AddParameter(Func<bool> condition, string name, object value)
+        {
+            if (!condition()) return this;
+            return AddParameter(name, value);
+        }
+
+        public QueryBuilder<TDb, T> AddParameter(QueryParameter queryParam)
+        {
             var param = Command.CreateParameter();
             param.ParameterName = queryParam.Name;
             param.Value = queryParam.Value;
@@ -171,19 +178,15 @@ namespace BookLe.DataMapper.Query
             return this;
         }
 
+        public QueryBuilder<TDb, T> AddParameter(Func<bool> condition, QueryParameter queryParam)
+        {
+            if (!condition()) return this;
+            return AddParameter(queryParam);
+        }
+
         /// <summary>
         /// Adds a parameter for the stored procedure or the dynamic sql only if condition is true.
         /// </summary>
-        public QueryBuilder<TDb, T> AddParameter(Func<bool> condition, string name, object value)
-        {
-            if (!condition()) return this;
-            var param = Command.CreateParameter();
-            param.ParameterName = name;
-            param.Value = value;
-            Command.Parameters.Add(param);
-            return this;
-        }
-
         /// <summary>
         /// Adds a parameter for the stored procedure or the dynamic sql with a specified direction (e.g. Input, Output)
         /// </summary>

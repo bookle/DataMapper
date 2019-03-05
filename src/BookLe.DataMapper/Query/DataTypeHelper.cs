@@ -38,6 +38,8 @@ namespace BookLe.DataMapper.Query
                 case DataTypeEnum.UInt64: return DbType.UInt64;
                 case DataTypeEnum.VarNumeric: return DbType.VarNumeric;
                 case DataTypeEnum.Xml: return DbType.Xml;
+                case DataTypeEnum.VarChar: return DbType.AnsiString;
+                case DataTypeEnum.Char: return DbType.AnsiStringFixedLength;
             }
             return DbType.Object;
         }
