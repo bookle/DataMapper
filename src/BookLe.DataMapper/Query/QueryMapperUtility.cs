@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace BookLe.DataMapper.Query
 {
-    public class QueryMapperUtility
+    public static class QueryMapperUtility
     {
         /// <summary>
         /// Converts a DataReader to a strongly typed IEnumerable. 

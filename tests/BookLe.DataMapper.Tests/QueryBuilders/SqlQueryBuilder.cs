@@ -15,6 +15,6 @@ namespace BookLe.DataMapper.Tests.QueryBuilders
             this.SetConnectionString(@"Server=myServerAddress;Database=myDataBase;Trusted_Connection=True;");
         }
 
-        public SqlQueryBuilder(Func<IDbCommand> createCommand, Action<IDbConnection> openConnection) : base(createCommand, openConnection) { }
+        public SqlQueryBuilder(Func<IDbConnection, IDbCommand> createCommand, Action<IDbConnection> openConnection) : base(createCommand, openConnection) { }
     }
 }

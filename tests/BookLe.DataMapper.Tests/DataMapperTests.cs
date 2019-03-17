@@ -19,9 +19,8 @@ namespace BookLe.DataMapper.Tests
             var builder = new MockSqlQueryBuilder<Customer>();
             builder.SetSql(sql);
             builder.GetResult();
-            var command = builder.InternalProps.Command;
-            Assert.True(command.CommandType == CommandType.Text);
-            Assert.True(command.CommandText == sql);
+            Assert.True(builder.InternalProps.CommandType == CommandType.Text);
+            Assert.True(builder.InternalProps.CommandText == sql);
         }
 
         [Fact]
@@ -31,9 +30,8 @@ namespace BookLe.DataMapper.Tests
             var builder = new MockSqlQueryBuilder<Customer>();
             builder.SetStoredProcedure(storedProcName);
             builder.GetResult();
-            var command = builder.InternalProps.Command;
-            Assert.True(command.CommandType == CommandType.StoredProcedure);
-            Assert.True(command.CommandText == storedProcName);
+            Assert.True(builder.InternalProps.CommandType == CommandType.StoredProcedure);
+            Assert.True(builder.InternalProps.CommandText == storedProcName);
         }
 
 
@@ -62,7 +60,7 @@ namespace BookLe.DataMapper.Tests
             var builder = new MockSqlQueryBuilder<Customer>();
             builder.SetCommandTimeout(300);
             builder.GetResult();
-            Assert.True(builder.InternalProps.Command.CommandTimeout == 300);
+            Assert.True(builder.InternalProps.CommandTimeout == 300);
         }
 
 
@@ -111,7 +109,7 @@ namespace BookLe.DataMapper.Tests
             var builder = new MockSqlQueryBuilder<Customer>();
             builder.AddParameter("@test", "testValue");
             builder.GetResult();
-            Assert.True(builder.InternalProps.Command.Parameters.Cast<IDbDataParameter>().First(p => p.ParameterName == "@test").Value == "testValue");
+            Assert.True(builder.InternalProps.Parameters.Cast<QueryParameter>().First(p => p.Name == "@test").Value == "testValue");
         }
 
         [Fact]
@@ -120,7 +118,7 @@ namespace BookLe.DataMapper.Tests
             var builder = new MockSqlQueryBuilder<Customer>();
             builder.AddParameter(new QueryParameter { Name = "@test", Value = "testValue", DataType = DataTypeEnum.VarChar, Size = 10 });
             builder.GetResult();
-            Assert.True(builder.InternalProps.Command.Parameters.Cast<IDbDataParameter>().First(p => p.ParameterName == "@test" && p.DbType == DbType.AnsiString && p.Size == 10).Value == "testValue");
+            Assert.True(builder.InternalProps.Parameters.Cast<QueryParameter>().First(p => p.Name == "@test" && p.DataType == DataTypeEnum.VarChar && p.Size == 10).Value == "testValue");
         }
 
         [Fact]
@@ -129,7 +127,7 @@ namespace BookLe.DataMapper.Tests
             var builder = new MockSqlQueryBuilder<Customer>();
             builder.AddParameter(new QueryParameter { Name = "@test", Value = "testValue", DataType = DataTypeEnum.Char, Size = 10 });
             builder.GetResult();
-            Assert.True(builder.InternalProps.Command.Parameters.Cast<IDbDataParameter>().First(p => p.ParameterName == "@test" && p.DbType == DbType.AnsiStringFixedLength && p.Size == 10).Value == "testValue");
+            Assert.True(builder.InternalProps.Parameters.Cast<QueryParameter>().First(p => p.Name == "@test" && p.DataType == DataTypeEnum.Char && p.Size == 10).Value == "testValue");
         }
 
         [Fact]
@@ -138,7 +136,7 @@ namespace BookLe.DataMapper.Tests
             var builder = new MockSqlQueryBuilder<Customer>();
             builder.AddParameter(() => true, "@test", "testValue");
             builder.GetResult();
-            Assert.True(builder.InternalProps.Command.Parameters.Cast<IDbDataParameter>().First(p => p.ParameterName == "@test").Value == "testValue");
+            Assert.True(builder.InternalProps.Parameters.Cast<QueryParameter>().First(p => p.Name == "@test").Value == "testValue");
         }
 
 
@@ -149,7 +147,7 @@ namespace BookLe.DataMapper.Tests
             builder.AddParameter(() => true, "@testTrue", "testValue");
             builder.AddParameter(() => false, "@testFalse", "testValue");
             builder.GetResult();
-            Assert.True(builder.InternalProps.Command.Parameters.Cast<IDbDataParameter>().Any(p => p.ParameterName == "@testFalse") == false);
+            Assert.True(builder.InternalProps.Parameters.Cast<QueryParameter>().Any(p => p.Name == "@testFalse") == false);
         }
 
         [Fact]
@@ -158,7 +156,7 @@ namespace BookLe.DataMapper.Tests
             var builder = new MockSqlQueryBuilder<Customer>();
             builder.AddParameter("@test", "testValue", QueryParameterDirectionEnum.Output);
             builder.GetResult();
-            Assert.True(builder.InternalProps.Command.Parameters.Cast<IDbDataParameter>().First(p => p.ParameterName == "@test").Direction == ParameterDirection.Output);
+            Assert.True(builder.InternalProps.Parameters.Cast<QueryParameter>().First(p => p.Name == "@test").Direction == QueryParameterDirectionEnum.Output);
         }
 
         [Fact]
