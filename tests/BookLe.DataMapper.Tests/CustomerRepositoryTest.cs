@@ -59,7 +59,7 @@ namespace BookLe.DataMapper.Tests
                 .ColumnFor(c => c.Zip, "PostalCode")
                 .Build();
             var command = new MockCommand(dt);
-            var sqlBuilder = new SqlQueryBuilder<Customer>(() => command, conn => { });     
+            var sqlBuilder = new SqlQueryBuilder<Customer>(conn => command, conn => { });
             var repository = new CustomerRepository(sqlBuilder);
             var customers = repository.GetCustomers();
             Assert.True(AreEqual(customers, list));

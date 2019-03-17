@@ -20,28 +20,30 @@ namespace BookLe.DataMapper.Query
         where T : class, new()
         where TDb : class, IDbConnection, new()
     {
-
-        protected IDbCommand _command;
-        protected string _connString;
-        protected bool _ignoreDataColumnNotFound = true;
-        protected IDbDataAdapter _dataAdapter;
-        protected List<PropertyMapping> _propertyMappings = new List<PropertyMapping>();
-        protected Func<DataValueList, T> _dataRowMapper;
-        protected Func<IDbCommand> _createCommand;
-        protected Action<IDbConnection> _openConnection;
+    
+        private CommandType _commandType;
+        private string _commandText;
+        private int _commandTimeout = 500;
+        private List<QueryParameter> _parameters = new List<QueryParameter>();
+        private string _connString;
+        private bool _ignoreDataColumnNotFound = true;
+        private List<PropertyMapping> _propertyMappings = new List<PropertyMapping>();
+        private Func<DataValueList, T> _dataRowMapper;
+        private Func<IDbConnection, IDbCommand> _createCommand = null;
+        private Action<IDbConnection> _openConnection = null;
 
         public QueryBuilder()
         {
-            _createCommand = () =>
-            {
-                var conn = GetUnOpenedConnection();
-                return conn.CreateCommand();
-            };
-
+            _createCommand = conn => conn.CreateCommand();
             _openConnection = conn => conn.Open();
         }
 
-        public QueryBuilder(Func<IDbCommand> createCommand, Action<IDbConnection> openConnection)
+        /// <summary>
+        /// Mocks will use this constructor for unit testing
+        /// </summary>
+        /// <param name="createCommand"></param>
+        /// <param name="openConnection"></param>
+        public QueryBuilder(Func<IDbConnection, IDbCommand> createCommand, Action<IDbConnection> openConnection)
         {
             _createCommand = createCommand;
             _openConnection = openConnection;
@@ -61,8 +63,8 @@ namespace BookLe.DataMapper.Query
         /// </summary>
         public QueryBuilder<TDb, T> SetStoredProcedure(string storedProcedureName)
         {
-            Command.CommandType = CommandType.StoredProcedure;
-            Command.CommandText = storedProcedureName;
+            _commandType = CommandType.StoredProcedure;
+            _commandText = storedProcedureName;
             return this;
         }
 
@@ -71,8 +73,8 @@ namespace BookLe.DataMapper.Query
         /// </summary>
         public QueryBuilder<TDb, T> SetSql(string sql)
         {
-            Command.CommandType = CommandType.Text;
-            Command.CommandText = sql;
+            _commandType = CommandType.Text;
+            _commandText = sql;
             return this;
         }
 
@@ -94,7 +96,7 @@ namespace BookLe.DataMapper.Query
         /// <param name="seconds">number of seconds the command is allowed to execute</param>
         public QueryBuilder<TDb, T> SetCommandTimeout(int seconds)
         {
-            Command.CommandTimeout = seconds;
+            _commandTimeout = seconds;
             return this;
         }
 
@@ -151,10 +153,12 @@ namespace BookLe.DataMapper.Query
         public QueryBuilder<TDb, T> AddParameter(string name,
                                                  object value)
         {
-            var param = Command.CreateParameter();
-            param.ParameterName = name;
-            param.Value = value;
-            Command.Parameters.Add(param);
+            var param = new QueryParameter
+            {
+                Name = name,
+                Value = value
+            };
+            _parameters.Add(param);
             return this;
         }
 
@@ -166,15 +170,7 @@ namespace BookLe.DataMapper.Query
 
         public QueryBuilder<TDb, T> AddParameter(QueryParameter queryParam)
         {
-            var param = Command.CreateParameter();
-            param.ParameterName = queryParam.Name;
-            param.Value = queryParam.Value;
-            if (queryParam.DataType.HasValue) param.DbType = DataTypeHelper.MapDataType(queryParam.DataType.Value);
-            if (queryParam.Size.HasValue) param.Size = queryParam.Size.Value;
-            if (queryParam.Precision.HasValue) param.Precision = queryParam.Precision.Value;
-            if (queryParam.Scale.HasValue) param.Scale = queryParam.Scale.Value;
-            if (queryParam.Direction.HasValue) param.Direction = DataTypeHelper.MapDirection(queryParam.Direction.Value);
-            Command.Parameters.Add(param);
+            _parameters.Add(queryParam);
             return this;
         }
 
@@ -192,13 +188,11 @@ namespace BookLe.DataMapper.Query
         /// </summary>
         public QueryBuilder<TDb, T> AddParameter(string name, object value, QueryParameterDirectionEnum direction)
         {
-            var param = Command.CreateParameter();
-            param.ParameterName = name;
+            var param = new QueryParameter();
+            param.Name = name;
             param.Value = value;
-            param.Direction = ParameterDirection.Input;
-            if (direction == QueryParameterDirectionEnum.Output)
-                param.Direction = ParameterDirection.Output;
-            Command.Parameters.Add(param);
+            param.Direction = direction;
+            _parameters.Add(param);
             return this;
         }
 
@@ -211,60 +205,26 @@ namespace BookLe.DataMapper.Query
             using (var conn = new TDb())
             {
                 conn.ConnectionString = _connString;
-                Command.Connection = conn;
                 _openConnection(conn);
-
                 return GetResult(conn);
             }
 
         }
 
+        public virtual QueryResult<T> GetResult(IDbConnection conn)
+        {
+            return _getResult(conn);
+        }
         /// <summary>
         /// Return the list and parameter values after executing the stored procedure or sql.
         /// </summary>
-        public virtual QueryResult<T> GetResult(IDbConnection conn)
-        {
-            if (conn.State != ConnectionState.Open)
-            {
-                _openConnection(conn);
-            }
-
-            Command.Connection = conn;
-
-            List<T> list;
-            
-            using (var dr = Command.ExecuteReader(CommandBehavior.Default))
-            {
-                if (_dataRowMapper != null)
-                {
-                    list = QueryMapperUtility.GetList<T>(dr, _dataRowMapper).ToList();
-                }
-                else
-                {
-                    list = QueryMapperUtility.GetList<T>(dr, _propertyMappings, _ignoreDataColumnNotFound).ToList();
-                }
-                dr.Close();
-            }
-
-            var result = new QueryResult<T>
-            {
-                List = list, 
-                Parameters = QueryMapperUtility.GetParameters(Command)
-            };
-
-            return result;
-
-
-        }
 
         /// <summary>
         /// Return the list and parameter values after executing the stored procedure or sql.
         /// </summary>
         public virtual QueryResult<T> GetResult(IDbTransaction trans)
         {
-            Command.Connection = trans.Connection;
-            Command.Transaction = trans;
-            return GetResult(Command.Transaction.Connection);
+            return _getResult(trans.Connection, trans);
         }
 
         /// <summary>
@@ -277,22 +237,87 @@ namespace BookLe.DataMapper.Query
             return conn;
         }
 
-        /// <summary>
-        /// The ADO.NET Command object
-        /// </summary>
-        protected IDbCommand Command
+        private QueryResult<T> _getResult(IDbConnection conn, IDbTransaction trans = null)
         {
-            get
+
+            if (conn?.State != ConnectionState.Open)
             {
-                if (_command == null)
+                _openConnection(conn);
+            }
+
+            using (var command = _createCommand(conn))
+            {
+                command.CommandType = _commandType;
+                command.CommandText = _commandText;
+                command.CommandTimeout = _commandTimeout;
+                if (trans != null) command.Transaction = trans;
+                foreach (var queryParam in _parameters)
                 {
-                    _command = _createCommand();
-                    _command.CommandTimeout = 500;
+                    var param = command.CreateParameter();
+                    param.ParameterName = queryParam.Name;
+                    param.Value = queryParam.Value;
+                    if (queryParam.DataType.HasValue) param.DbType = DataTypeHelper.MapDataType(queryParam.DataType.Value);
+                    if (queryParam.Size.HasValue) param.Size = queryParam.Size.Value;
+                    if (queryParam.Scale.HasValue) param.Scale = queryParam.Scale.Value;
+                    if (queryParam.Precision.HasValue) param.Precision = queryParam.Precision.Value;
+                    if (queryParam.Direction.HasValue) param.Direction = DataTypeHelper.MapDirection(queryParam.Direction.Value);
+                    command.Parameters.Add(param);
                 }
-                return _command;
+
+                List<T> list;
+
+                using (var dr = command.ExecuteReader(CommandBehavior.Default))
+                {
+                    if (_dataRowMapper != null)
+                    {
+                        list = QueryMapperUtility.GetList<T>(dr, _dataRowMapper).ToList();
+                    }
+                    else
+                    {
+                        list = QueryMapperUtility.GetList<T>(dr, _propertyMappings, _ignoreDataColumnNotFound).ToList();
+                    }
+                    dr.Close();
+                }
+
+                var result = new QueryResult<T>
+                {
+                    List = list,
+                    Parameters = QueryMapperUtility.GetParameters(command)
+                };
+
+                return result;
+
             }
         }
 
+        protected (
+                    CommandType CommandType, 
+                    string CommandText, 
+                    int CommandTimeout, 
+                    string ConnString, 
+                    bool IgnoreColumnNotFound,
+                    List<QueryParameter> Parameters,
+                    List<PropertyMapping> propertyMappings,
+                    Func<DataValueList, T> DataRowMapper,
+                    Func<IDbConnection, IDbCommand> CreateCommand,
+                    Action<IDbConnection> OpenConnection
+                  ) GetInternalProps()
+        {
+            return (
+                     _commandType,
+                     _commandText,
+                     _commandTimeout,
+                     _connString,
+                     _ignoreDataColumnNotFound,
+                     _parameters,
+                     _propertyMappings,
+                     _dataRowMapper,
+                     _createCommand,
+                     _openConnection
+                   );
+        }
+
     }
+
 
 }
